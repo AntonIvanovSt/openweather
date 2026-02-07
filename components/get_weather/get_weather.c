@@ -2,9 +2,7 @@
 #include <string.h>
 #include "get_weather.h"
 
-static const char *TAG = "WEATHER";
-
-#define WEATHER_API_KEY "API_KEY"
+#define WEATHER_API_KEY "b1f36b777ec648cc86753529260402"
 #define CITY "Tokyo"
 #define WEATHER_API_URL "http://api.weatherapi.com/v1/current.json?key=" WEATHER_API_KEY "&q=" CITY "&aqi=no"
 
@@ -12,6 +10,8 @@ static const char *TAG = "WEATHER";
 
 static char http_response_buffer[MAX_HTTP_OUTPUT_BUFFER] = {0};
 static int response_len = 0;
+
+static const char *TAG = "WEATHER";
 
 esp_err_t _http_event_handler(esp_http_client_event_t *evt)
 {
@@ -41,7 +41,8 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
             ESP_LOGI(TAG, "HTTP_EVENT_ON_FINISH");
             if (response_len > 0) {
                 ESP_LOGI(TAG, "Total response length: %d bytes", response_len);
-                printf("\n=== Weather Data ===\n%s\n===================\n\n", http_response_buffer);
+                printf("\n======== Data =========\n%s\n=====================\n\n",
+                       http_response_buffer);
             }
             break;
         case HTTP_EVENT_DISCONNECTED:
@@ -85,3 +86,4 @@ void get_weather_data(void)
     
     esp_http_client_cleanup(client);
 }
+

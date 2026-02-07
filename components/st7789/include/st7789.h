@@ -1,12 +1,11 @@
 #include "lvgl.h"
 #include "esp_lvgl_port.h"
-// Display configuration - adjust these to match your setup
+
 #define LCD_HOST           SPI2_HOST
 #define LCD_PIXEL_CLK_HZ   (40 * 1000 * 1000)
 #define LCD_BK_LIGHT_ON    1
 #define LCD_BK_LIGHT_OFF   0
 
-// Pin definitions - adjust these to match your wiring
 #define PIN_NUM_MOSI       23
 #define PIN_NUM_CLK        18
 #define PIN_NUM_CS         5

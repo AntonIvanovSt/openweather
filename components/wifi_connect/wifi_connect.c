@@ -229,6 +229,8 @@ void wifi_connection_task()
         ESP_LOGI(TAG, "Primary Channel: %d", ap_info.primary);
         ESP_LOGI(TAG, "RSSI: %d", ap_info.rssi);
         ESP_LOGI(TAG, "--------------------------------");
-        
     }
+
+    vTaskDelay(2000 / portTICK_PERIOD_MS);
+    printf("WIFI was initiated ...........\n\n");
 }

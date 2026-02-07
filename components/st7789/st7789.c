@@ -6,8 +6,8 @@
 #include "esp_lcd_panel_ops.h"
 #include "driver/gpio.h"
 #include "driver/spi_master.h"
-#include "esp_lvgl_port.h"
-#include "lvgl.h"
+// #include "esp_lvgl_port.h"
+// #include "lvgl.h"
 #include "st7789.h"
 
 static const char *TAG = "LVGL_DEMO";
