@@ -5,7 +5,7 @@
 #include "get_weather.h"
 #include "openweather.h"
 
-#define WEATHER_API_KEY "key"
+#define WEATHER_API_KEY "b1f36b777ec648cc86753529260402"
 #define CITY "Tokyo"
 #define WEATHER_API_URL "http://api.weatherapi.com/v1/current.json?key=" WEATHER_API_KEY "&q=" CITY "&aqi=no"
 

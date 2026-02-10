@@ -20,6 +20,15 @@ sensor_data_t g_sensor_data = {0};
 time_data_t g_time_data = {0};
 weather_data_t g_weather_data = {0};
 
+lv_obj_t *label_co2 = NULL;
+lv_obj_t *label_temp = NULL;
+lv_obj_t *label_humid = NULL;
+lv_obj_t *screen_sensor = NULL;
+lv_obj_t *screen_info = NULL;
+lv_obj_t *label_time = NULL;
+lv_obj_t *label_info = NULL;
+lv_obj_t *label_date = NULL;
+
 void app_main(void)
 {
     sensor_mutex = xSemaphoreCreateMutex();
@@ -45,11 +54,13 @@ void app_main(void)
         xTaskCreate(weather_task, "weather_task", 8192, NULL, 5, NULL);
     }
 
+    init_start_screen();
+
     while (1) {
         // Wait for any data update (timeout 30 seconds)
         bits = xEventGroupWaitBits(
             data_events,
-            SENSOR_DATA_READY | TIME_DATA_READY,
+            SENSOR_DATA_READY | TIME_DATA_READY | WEATHER_DATA_READY,
             pdTRUE,  // Clear bits on exit
             pdFALSE, // Wait for ANY bit (not all)
             pdMS_TO_TICKS(30000)
@@ -63,7 +74,8 @@ void app_main(void)
                 
                 // Do something with sensor data
                 // e.g., log to SD card, send to server, update display
-                
+
+
                 xSemaphoreGive(sensor_mutex);
             }
         }
@@ -84,6 +96,7 @@ void app_main(void)
                 // add here screen update
                 vTaskDelay(pdMS_TO_TICKS(500));
                 xEventGroupClearBits(data_events, WEATHER_DATA_READY);
+
                 xSemaphoreGive(weather_mutex);
             }
         }

@@ -27,6 +27,32 @@
 #define LVGL_TICK_PERIOD_MS 2
 #define LVGL_BUFFER_HEIGHT  50
 
+// LVGL colors
+#define COLOR_DARK_PURPLE lv_color_make(30, 15, 39)
+#define COLOR_WHITE lv_color_make(31, 31, 63)
+#define COLOR_ORANGE lv_color_make(0, 27, 35)
+#define COLOR_BLACK lv_color_make(0, 0, 0)
+#define COLOR_PINK lv_color_make(15, 31, 30)
+#define COLOR_GREEN lv_color_make(7, 7, 30)
+#define COLOR_CYAN lv_color_make(31, 0, 63)
+
+extern lv_obj_t *label_co2;
+extern lv_obj_t *label_temp;
+extern lv_obj_t *label_humid;
+extern lv_obj_t *screen_sensor;
+extern lv_obj_t *screen_info;
+extern lv_obj_t *label_time;
+extern lv_obj_t *label_info;
+extern lv_obj_t *label_date;
+
+void create_sensor_labels();
+void create_sensor_co2(const lv_font_t *font_label, const lv_font_t *font_value);
+void create_sensor_temp(const lv_font_t *font_mark, const lv_font_t *font_label, const lv_font_t *font_value);
+void create_sensor_hum(const lv_font_t *font_mark, const lv_font_t *font_label, const lv_font_t *font_value);
+
 void init_lcd(int rotation);
 void create_label(const lv_font_t *font, int x, int y, char *text);
 void create_background(void);
+void create_sensor_screen();
+void create_info_screen();
+void init_start_screen(void);
