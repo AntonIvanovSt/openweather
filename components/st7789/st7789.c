@@ -93,91 +93,79 @@ void init_lcd(int rotation)
     ESP_LOGI(TAG, "Setup complete");
 }
 
-void create_background(void)
+lv_obj_t* create_background(lv_color_t color)
 {
     if (lvgl_port_lock(0)) {
-
-        lv_obj_t *screen = lv_screen_active();
-        lv_obj_set_style_bg_color(screen, lv_color_make(0, 0, 0), LV_PART_MAIN);
+        lv_obj_t *screen = lv_obj_create(NULL);
+        lv_obj_set_style_bg_color(screen, color, LV_PART_MAIN);
         lv_obj_set_style_bg_opa(screen, LV_OPA_COVER, LV_PART_MAIN);
-
         lvgl_port_unlock();
+        return screen;
     }
+    return NULL;
 }
 
 
-void create_label(const lv_font_t *font, int x, int y, char *text)
+lv_obj_t* create_label(lv_obj_t *display_label,
+                  const lv_font_t *font, lv_color_t color,
+                  int x, int y, const char *text)
 {
     if (lvgl_port_lock(0)) {
 
-        lv_obj_t *label = lv_label_create(lv_screen_active());
-        lv_label_set_text(label, text);
+        lv_obj_t *value_label = lv_label_create(display_label);
+        lv_label_set_text(value_label, text);
 
-        lv_obj_set_style_text_font(label, font, 0);
+        lv_obj_set_style_text_font(value_label, font, 0);
 
-        lv_obj_set_style_text_color(label, lv_color_make(31, 31, 63), 0);
-        lv_obj_set_style_text_opa(label, LV_OPA_COVER, 0);
+        lv_obj_set_style_text_color(value_label, color, 0);
+        lv_obj_set_style_text_opa(value_label, LV_OPA_COVER, 0);
  
-        lv_obj_set_pos(label, x, y);
-
+        lv_obj_set_pos(value_label, x, y);
         lvgl_port_unlock();
+        return value_label;
     }
+    return NULL;
 }
 
 // in lv_color_make order is BRG with RGB565 notation
 // max values are: 31, 31, 63
-lv_obj_t* create_sensor_display(
-    const char *label_text,
-    const char *unit_text,
-    const lv_font_t *font_label,
-    const lv_font_t *font_unit,
-    const lv_font_t *font_value,
-    int16_t label_x, int16_t label_y,
-    int16_t unit_x, int16_t unit_y,
-    int16_t value_x, int16_t value_y)
+
+lv_obj_t *create_line(lv_point_precise_t *line_array, lv_obj_t *display_label,
+                      lv_color_t color, int x, int y)
 {
-    // Sensor Label
-    lv_obj_t *label_text_obj = lv_label_create(screen_sensor);
-    lv_label_set_text(label_text_obj, label_text);
-    lv_obj_set_style_text_font(label_text_obj, font_label, 0);
-    lv_obj_set_style_text_color(label_text_obj, COLOR_DARK_PURPLE, 0);
-    lv_obj_set_pos(label_text_obj, label_x, label_y);
-    
-    // Unit Mark
-    lv_obj_t *label_unit_obj = lv_label_create(screen_sensor);
-    lv_label_set_text(label_unit_obj, unit_text);
-    lv_obj_set_style_text_font(label_unit_obj, font_unit, 0);
-    lv_obj_set_style_text_color(label_unit_obj, COLOR_DARK_PURPLE, 0);
-    lv_obj_set_pos(label_unit_obj, unit_x, unit_y);
-    
-    // Value Label
-    lv_obj_t *label_value_obj = lv_label_create(screen_sensor);
-    lv_label_set_text(label_value_obj, " -- ");
-    lv_obj_set_style_text_font(label_value_obj, font_value, 0);
-    lv_obj_set_style_text_color(label_value_obj, COLOR_ORANGE, 0);
-    lv_obj_set_pos(label_value_obj, value_x, value_y);
-    
-    return label_value_obj;
+    if (lvgl_port_lock(0)) {
+        lv_obj_t *line = lv_line_create(display_label);
+        lv_line_set_points(line, line_array, 2);
+
+        // Position the line
+        lv_obj_set_pos(line, x, y);
+
+        // Style the line
+        lv_obj_set_style_line_width(line, 2, 0);
+        lv_obj_set_style_line_color(line, color, 0);
+        lvgl_port_unlock();
+        return line;
+    }
+    return NULL;
 }
 
-void create_all_sensors(const lv_font_t *font_mark, const lv_font_t *font_label, const lv_font_t *font_value)
+void create_info_screen(void)
 {
-    // CO2 sensor
-    label_co2 = create_sensor_display("CO2", "ppm", font_label, font_label, font_value,
-                                       10, 250, 190, 250, 70, 260);
-    
-    // Temperature sensor
-    label_temp = create_sensor_display("temp", "°C", font_label, font_mark, font_value,
-                                        10, 170, 80, 170, 5, 200);
-    
-    // Humidity sensor
-    label_humid = create_sensor_display("hum", "%", font_label, font_mark, font_value,
-                                         130, 170, 210, 170, 125, 200);
+    screen_info = create_background(COLOR_BLACK);
+
+    label_info = create_label(screen_info, &lv_font_montserrat_14, 
+                              COLOR_ORANGE, 20, 20, "Start Initializing");
 }
 
-void create_sensor_lines()
+// Create the sensor screen
+void create_sensor_screen(void)
 {
-    // Create line
+    extern lv_font_t jet_mono_light_32;
+    extern lv_font_t noto_sans_jp_24;
+    extern lv_font_t jb_mono_bold_48;
+    extern lv_font_t jb_mono_bold_64;
+    extern lv_font_t jb_mono_reg_24;
+
     static lv_point_precise_t line_points1[] = {
         {0, 0},      // Start point (x, y)
         {240, 0}     // End point (x, y)
@@ -187,111 +175,54 @@ void create_sensor_lines()
         {0, 80}     // End point (x, y)
     };
 
-    // Create line object
-    lv_obj_t *line1 = lv_line_create(screen_sensor);
-    lv_line_set_points(line1, line_points1, 2);
+    screen_sensor = create_background(COLOR_BLACK);
 
-    // Position the line
-    lv_obj_set_pos(line1, 0, 160);  // Position where line starts
+    create_line(line_points1, screen_sensor, COLOR_ORANGE, 0, 160);
+    create_line(line_points1, screen_sensor, COLOR_ORANGE, 0, 240);
+    create_line(line_points2, screen_sensor, COLOR_ORANGE, 120, 160);
 
-    // Style the line
-    lv_obj_set_style_line_width(line1, 2, 0);
-    lv_obj_set_style_line_color(line1, COLOR_ORANGE, 0);
+    label_time = create_label(screen_sensor, &jb_mono_bold_64, COLOR_ORANGE, 20, 30, "00:00");
+    label_date = create_label(screen_sensor, &lv_font_montserrat_14, COLOR_CYAN, 80, 90, "YYYY/mm/dd");
 
-    // Create line object
-    lv_obj_t *line2 = lv_line_create(screen_sensor);
-    lv_line_set_points(line2, line_points1, 2);
+    label_co2 = create_label(screen_sensor, &jb_mono_reg_24, COLOR_DARK_PURPLE, 10, 250, "CO2");
+    label_co2 = create_label(screen_sensor, &jb_mono_reg_24, COLOR_DARK_PURPLE, 190, 250, "ppm");
+    label_co2 = create_label(screen_sensor, &jb_mono_bold_48, COLOR_ORANGE, 70, 260, "--");
 
-    // Position the line
-    lv_obj_set_pos(line2, 0, 240);  // Position where line starts
+    label_temp = create_label(screen_sensor, &noto_sans_jp_24, COLOR_DARK_PURPLE, 10, 170, "湿度");
+    label_temp = create_label(screen_sensor, &jb_mono_reg_24, COLOR_DARK_PURPLE, 80, 170, "°C");
+    label_temp = create_label(screen_sensor, &jet_mono_light_32, COLOR_ORANGE, 10, 200, "--");
 
-    // Style the line
-    lv_obj_set_style_line_width(line2, 2, 0);
-    lv_obj_set_style_line_color(line2, COLOR_ORANGE, 0);
-
-    // Create line object
-    lv_obj_t *line3 = lv_line_create(screen_sensor);
-    lv_line_set_points(line3, line_points2, 2);
-
-    // Position the line
-    lv_obj_set_pos(line3, 120, 160);  // Position where line starts
-
-    // Style the line
-    lv_obj_set_style_line_width(line3, 2, 0);
-    lv_obj_set_style_line_color(line3, COLOR_ORANGE, 0);
-
+    label_humid = create_label(screen_sensor, &noto_sans_jp_24, COLOR_DARK_PURPLE, 130, 170, "温度");
+    label_humid = create_label(screen_sensor, &jb_mono_reg_24, COLOR_DARK_PURPLE, 210, 170, "%");
+    label_humid = create_label(screen_sensor, &jet_mono_light_32, COLOR_ORANGE, 130, 200, "--");
 }
 
-void create_info_screen()
+void create_weather_screen()
 {
-    if (lvgl_port_lock(0)) {
-        screen_info = lv_obj_create(NULL);
-        lv_obj_set_style_bg_color(screen_info, COLOR_BLACK, LV_PART_MAIN);
-        lv_obj_set_style_bg_opa(screen_info, LV_OPA_COVER, LV_PART_MAIN);
+    extern lv_font_t jet_mono_light_32;
+    extern lv_font_t jb_mono_bold_64;
+    extern lv_font_t jb_mono_reg_24;
 
-        lv_obj_t *rect = lv_obj_create(screen_info);
-    
-        // Set position and size
-        lv_obj_set_pos(rect, 10, 10);           // x, y position
-        lv_obj_set_size(rect, 220, 290);        // width, height
+    screen_weather = create_background(COLOR_BLACK);
 
-        // Style the rectangle
-        lv_obj_set_style_bg_color(rect, COLOR_BLACK, 0);  // Background color
-        lv_obj_set_style_bg_opa(rect, LV_OPA_COVER, 0);              // Full opacity
-        lv_obj_set_style_border_width(rect, 2, 0);                    // Border width
-        lv_obj_set_style_border_color(rect, COLOR_ORANGE, 0); // Border color
-        lv_obj_set_style_radius(rect, 10, 0);
-
-        label_info = lv_label_create(screen_info);
-        lv_obj_set_style_text_font(label_info, &lv_font_montserrat_14, 0);
-        lv_obj_set_style_text_color(label_info, COLOR_DARK_PURPLE, 0);
-        lv_obj_set_pos(label_info, 20, 20);
-
-        lv_label_set_text(label_info, "Please, wait");
-        lvgl_port_unlock();
-    }
+    label_out_temp = create_label(screen_weather, &jb_mono_bold_64, COLOR_ORANGE, 20, 30, "0");
+    label_out_cond = create_label(screen_weather, &jet_mono_light_32, COLOR_ORANGE, 60, 50, "--");
 }
 
-// Create the sensor screen
-void create_sensor_screen()
-{
-    if (lvgl_port_lock(0)) {
-        // Create sensor screen
-        screen_sensor = lv_obj_create(NULL);
-        lv_obj_set_style_bg_color(screen_sensor, COLOR_BLACK, LV_PART_MAIN);
-        lv_obj_set_style_bg_opa(screen_sensor, LV_OPA_COVER, LV_PART_MAIN);
-        
-        create_sensor_lines();
-        // Add time label
-        label_time = lv_label_create(screen_sensor);
-        lv_label_set_text(label_time, "00:00");
-        lv_obj_set_style_text_font(label_time, &lv_font_montserrat_14, 0);
-        lv_obj_set_style_text_color(label_time, COLOR_ORANGE, 0);
-        lv_obj_set_pos(label_time, 20, 30);
-        
-        label_date = lv_label_create(screen_sensor);
-        lv_label_set_text(label_date, "YYYY/mm/dd");
-        lv_obj_set_style_text_font(label_date, &lv_font_montserrat_14, 0);
-        lv_obj_set_style_text_color(label_date, COLOR_CYAN, 0);
-        lv_obj_set_pos(label_date, 80, 90);
-
-        lvgl_port_unlock();
-    }
-    // Create sensor labels
-    create_all_sensors(&lv_font_montserrat_14, &lv_font_montserrat_14, &lv_font_montserrat_14);
-}
-
-void init_start_screen(void)
+void check_modules_state(void)
 {
     bool display_initialized = false;
+    char log_buffer[64];
+    lv_obj_t *log_sensor = NULL;
+    lv_obj_t *log_time = NULL;
+    lv_obj_t *log_weather = NULL;
 
-    init_lcd(0);
+    lv_label_set_text(label_info, "Waiting modules...");
 
-    if (lvgl_port_lock(0)) {
-        create_info_screen();
-        lv_screen_load(screen_info);
-        lvgl_port_unlock();
-    }
+    log_sensor = create_label(screen_info, &lv_font_montserrat_14, COLOR_ORANGE, 20, 60, "  Sensor: ---");
+    log_time = create_label(screen_info, &lv_font_montserrat_14, COLOR_ORANGE, 20, 80, "  Time: ---");
+    log_weather = create_label(screen_info, &lv_font_montserrat_14, COLOR_ORANGE, 20, 100, "  Weather: ---");
+
     while (!display_initialized) {
         ESP_LOGI(TAG, "Waiting for all data sources...");
         
@@ -299,18 +230,25 @@ void init_start_screen(void)
             data_events,
             SENSOR_DATA_READY | TIME_DATA_READY | WEATHER_DATA_READY,
             pdFALSE,
-            pdTRUE,   // Wait for ALL
-            pdMS_TO_TICKS(5000)  // Check every 5 seconds
+            pdTRUE,
+            pdMS_TO_TICKS(5000)
         );
         
-        // Show status
-        ESP_LOGI(TAG, "Data status:");
-        ESP_LOGI(TAG, "  Sensor: %s", (bits & SENSOR_DATA_READY) ? "READY" : "FAILED");
-        ESP_LOGI(TAG, "  Time:   %s", (bits & TIME_DATA_READY) ? "READY" : "FAILED");
-        ESP_LOGI(TAG, "  Weather: %s", (bits & WEATHER_DATA_READY) ? "READY" : "FAILED");
-
-        // lv_obj_t label_sensor_ready = lv_label_create(screen_info);
-        
+        if (lvgl_port_lock(0)) {
+            snprintf(log_buffer, sizeof(log_buffer), "  Sensor: %s", 
+                    (bits & SENSOR_DATA_READY) ? "READY" : "FAILED");
+            lv_label_set_text(log_sensor, log_buffer);
+            
+            snprintf(log_buffer, sizeof(log_buffer), "  Time: %s", 
+                    (bits & TIME_DATA_READY) ? "READY" : "FAILED");
+            lv_label_set_text(log_time, log_buffer);
+            
+            snprintf(log_buffer, sizeof(log_buffer), "  Weather: %s", 
+                    (bits & WEATHER_DATA_READY) ? "READY" : "FAILED");
+            lv_label_set_text(log_weather, log_buffer);
+            
+            lvgl_port_unlock();
+        }
         // Check if all ready
         if ((bits & (SENSOR_DATA_READY | TIME_DATA_READY | WEATHER_DATA_READY)) == 
             (SENSOR_DATA_READY | TIME_DATA_READY | WEATHER_DATA_READY)) {
@@ -322,11 +260,23 @@ void init_start_screen(void)
             
             if (lvgl_port_lock(0)) {
                 create_sensor_screen();
+                create_weather_screen();
                 lv_screen_load(screen_sensor);
                 lvgl_port_unlock();
             }
             
             display_initialized = true;
         }
+    }
+
+}
+
+void init_start_screen(void)
+{
+    init_lcd(0);
+    create_info_screen();
+    if (lvgl_port_lock(0)) {
+        lv_screen_load(screen_info);
+        lvgl_port_unlock();
     }
 }

@@ -174,7 +174,7 @@ void weather_task(void *pvParameters)
             ESP_LOGE(TAG, "HTTP GET request failed: %s", esp_err_to_name(err));
         }
         esp_http_client_cleanup(client);
-        vTaskDelay(pdMS_TO_TICKS(30 * 60 * 1000));
+        vTaskDelay(pdMS_TO_TICKS(30 * 1000));
     }
 }
 

@@ -6,6 +6,7 @@
 #include "get_time.h"
 #include "get_sensor_data.h"
 #include "st7789.h"
+#include "buttons.h"
 #include "openweather.h"
 
 static const char *TAG = "main";
@@ -23,11 +24,15 @@ weather_data_t g_weather_data = {0};
 lv_obj_t *label_co2 = NULL;
 lv_obj_t *label_temp = NULL;
 lv_obj_t *label_humid = NULL;
-lv_obj_t *screen_sensor = NULL;
-lv_obj_t *screen_info = NULL;
 lv_obj_t *label_time = NULL;
 lv_obj_t *label_info = NULL;
 lv_obj_t *label_date = NULL;
+lv_obj_t *label_out_temp = NULL;
+lv_obj_t *label_out_cond = NULL;
+
+lv_obj_t *screen_sensor = NULL;
+lv_obj_t *screen_info = NULL;
+lv_obj_t *screen_weather = NULL;
 
 void app_main(void)
 {
@@ -36,6 +41,8 @@ void app_main(void)
     weather_mutex = xSemaphoreCreateMutex();
 
     data_events = xEventGroupCreate();
+
+    init_start_screen();
 
     xTaskCreate(wifi_connection_task, "wifi_connection_task", 4096, NULL, 6, NULL);
 
@@ -52,9 +59,14 @@ void app_main(void)
         xTaskCreate(sensor_task, "sensor_task", 4096, NULL, 5, NULL);
         xTaskCreate(time_task, "time_task", 4096, NULL, 5, NULL);
         xTaskCreate(weather_task, "weather_task", 8192, NULL, 5, NULL);
+
+        vTaskDelay(pdMS_TO_TICKS(500));
+
+        xTaskCreate(on_off_button_task, "on_off_button_task", 4096, NULL, 3, NULL);
+        xTaskCreate(next_screen_button_task, "next_screen_button_task", 4096, NULL, 3, NULL);
     }
 
-    init_start_screen();
+    check_modules_state();
 
     while (1) {
         // Wait for any data update (timeout 30 seconds)
@@ -67,14 +79,11 @@ void app_main(void)
         );
         
         char sensor_buffer[64];
-        // Process sensor data
         if (bits & SENSOR_DATA_READY) {
             if (xSemaphoreTake(sensor_mutex, pdMS_TO_TICKS(100)) == pdTRUE) {
                 ESP_LOGI(TAG, "Processing sensor: CO2=%d ppm, Temp=%.1f°C, Hum=%.1f%%",
                         g_sensor_data.co2_ppm, g_sensor_data.temperature, g_sensor_data.humidity);
-                
-                // Do something with sensor data
-                // e.g., log to SD card, send to server, update display
+
                 if (lvgl_port_lock(0)) {
                     if (label_co2) {
                         if (g_sensor_data.co2_ppm > 1000) {
@@ -118,12 +127,17 @@ void app_main(void)
                 xSemaphoreGive(time_mutex);
             }
         }
+        char weather_buffer[64];
         if (bits & WEATHER_DATA_READY) {
             if (xSemaphoreTake(weather_mutex, pdMS_TO_TICKS(100)) == pdTRUE) {
                 ESP_LOGI(TAG, "Processing weather: %.1f°C, %s",
                         g_weather_data.temperature, g_weather_data.condition);
-                // add here screen update
                 vTaskDelay(pdMS_TO_TICKS(500));
+                // if (lvgl_port_lock(0)) {
+                //     snprintf(weather_buffer, sizeof(weather_buffer), "%.1f", g_weather_data.temperature);
+                //     lv_label_set_text(label_out_temp, weather_buffer);
+                //     lv_label_set_text(label_out_cond, g_weather_data.condition);
+                // }
                 xEventGroupClearBits(data_events, WEATHER_DATA_READY);
 
                 xSemaphoreGive(weather_mutex);

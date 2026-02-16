@@ -39,20 +39,18 @@
 extern lv_obj_t *label_co2;
 extern lv_obj_t *label_temp;
 extern lv_obj_t *label_humid;
-extern lv_obj_t *screen_sensor;
-extern lv_obj_t *screen_info;
 extern lv_obj_t *label_time;
 extern lv_obj_t *label_info;
 extern lv_obj_t *label_date;
+extern lv_obj_t *label_out_cond;
+extern lv_obj_t *label_out_temp;
 
-void create_sensor_labels();
-void create_sensor_co2(const lv_font_t *font_label, const lv_font_t *font_value);
-void create_sensor_temp(const lv_font_t *font_mark, const lv_font_t *font_label, const lv_font_t *font_value);
-void create_sensor_hum(const lv_font_t *font_mark, const lv_font_t *font_label, const lv_font_t *font_value);
+extern lv_obj_t *screen_sensor;
+extern lv_obj_t *screen_info;
+extern lv_obj_t *screen_weather;
 
-void init_lcd(int rotation);
-void create_label(const lv_font_t *font, int x, int y, char *text);
-void create_background(void);
 void create_sensor_screen();
 void create_info_screen();
 void init_start_screen(void);
+void check_modules_state(void);
+void create_weather_screen();
