@@ -42,8 +42,11 @@ extern lv_obj_t *label_humid;
 extern lv_obj_t *label_time;
 extern lv_obj_t *label_info;
 extern lv_obj_t *label_date;
-extern lv_obj_t *label_out_cond;
 extern lv_obj_t *label_out_temp;
+extern lv_obj_t *label_out_feels;
+extern lv_obj_t *label_out_humidity;
+extern lv_obj_t *label_out_cond;
+extern lv_obj_t *label_out_wind;
 
 extern lv_obj_t *screen_sensor;
 extern lv_obj_t *screen_info;

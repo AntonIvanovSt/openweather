@@ -3,7 +3,7 @@ idf_component_register(SRCS "openweather.c"
     "fonts/jet_mono_light_32.c"
     "fonts/jb_mono_bold_48.c"
     "fonts/jb_mono_bold_64.c"
-    "fonts/jb_mono_reg_24.c"
+    "fonts/jb_mono_reg_20.c"
                     INCLUDE_DIRS "."
                     REQUIRES wifi_connect 
                     get_weather 

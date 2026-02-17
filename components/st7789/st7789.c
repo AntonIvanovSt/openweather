@@ -164,7 +164,7 @@ void create_sensor_screen(void)
     extern lv_font_t noto_sans_jp_24;
     extern lv_font_t jb_mono_bold_48;
     extern lv_font_t jb_mono_bold_64;
-    extern lv_font_t jb_mono_reg_24;
+    extern lv_font_t jb_mono_reg_20;
 
     static lv_point_precise_t line_points1[] = {
         {0, 0},      // Start point (x, y)
@@ -184,29 +184,60 @@ void create_sensor_screen(void)
     label_time = create_label(screen_sensor, &jb_mono_bold_64, COLOR_ORANGE, 20, 30, "00:00");
     label_date = create_label(screen_sensor, &lv_font_montserrat_14, COLOR_CYAN, 80, 90, "YYYY/mm/dd");
 
-    label_co2 = create_label(screen_sensor, &jb_mono_reg_24, COLOR_DARK_PURPLE, 10, 250, "CO2");
-    label_co2 = create_label(screen_sensor, &jb_mono_reg_24, COLOR_DARK_PURPLE, 190, 250, "ppm");
+    label_co2 = create_label(screen_sensor, &jb_mono_reg_20, COLOR_DARK_PURPLE, 10, 250, "CO2");
+    label_co2 = create_label(screen_sensor, &jb_mono_reg_20, COLOR_DARK_PURPLE, 190, 250, "ppm");
     label_co2 = create_label(screen_sensor, &jb_mono_bold_48, COLOR_ORANGE, 70, 260, "--");
 
     label_temp = create_label(screen_sensor, &noto_sans_jp_24, COLOR_DARK_PURPLE, 10, 170, "湿度");
-    label_temp = create_label(screen_sensor, &jb_mono_reg_24, COLOR_DARK_PURPLE, 80, 170, "°C");
+    label_temp = create_label(screen_sensor, &jb_mono_reg_20, COLOR_DARK_PURPLE, 80, 170, "°C");
     label_temp = create_label(screen_sensor, &jet_mono_light_32, COLOR_ORANGE, 10, 200, "--");
 
     label_humid = create_label(screen_sensor, &noto_sans_jp_24, COLOR_DARK_PURPLE, 130, 170, "温度");
-    label_humid = create_label(screen_sensor, &jb_mono_reg_24, COLOR_DARK_PURPLE, 210, 170, "%");
+    label_humid = create_label(screen_sensor, &jb_mono_reg_20, COLOR_DARK_PURPLE, 210, 170, "%");
     label_humid = create_label(screen_sensor, &jet_mono_light_32, COLOR_ORANGE, 130, 200, "--");
 }
 
 void create_weather_screen()
 {
+    extern lv_font_t jb_mono_reg_20;
     extern lv_font_t jet_mono_light_32;
     extern lv_font_t jb_mono_bold_64;
-    extern lv_font_t jb_mono_reg_24;
 
     screen_weather = create_background(COLOR_BLACK);
-
-    label_out_temp = create_label(screen_weather, &jb_mono_bold_64, COLOR_ORANGE, 20, 30, "0");
-    label_out_cond = create_label(screen_weather, &jet_mono_light_32, COLOR_ORANGE, 60, 50, "--");
+    
+    if (lvgl_port_lock(0)) {
+        // Temperature
+        label_out_temp = create_label(screen_weather, &jb_mono_reg_20, COLOR_DARK_PURPLE, 
+                                      90, 30, "°C");
+        label_out_temp = create_label(screen_weather, &jb_mono_bold_64, COLOR_ORANGE, 
+                                      20, 30, "--");
+        
+        // Feels like
+        label_out_feels = create_label(screen_weather, &jb_mono_reg_20, COLOR_DARK_PURPLE, 
+                                       90, 50, "(-- °C)");
+        
+        // Humidity
+        create_label(screen_weather, &jb_mono_reg_20, COLOR_DARK_PURPLE, 
+                    10, 150, "H:");
+        create_label(screen_weather, &jb_mono_reg_20, COLOR_DARK_PURPLE, 
+                    70, 150, "%");
+        label_out_humidity = create_label(screen_weather, &jb_mono_reg_20, COLOR_ORANGE, 
+                                          30, 150, "--");
+        
+        // Condition
+        label_out_cond = create_label(screen_weather, &jb_mono_reg_20, COLOR_CYAN, 
+                                      50, 120, "Loading...");
+        
+        // Wind
+        create_label(screen_weather, &jb_mono_reg_20, COLOR_DARK_PURPLE, 
+                    10, 230, "W:");
+        create_label(screen_weather, &jb_mono_reg_20, COLOR_DARK_PURPLE, 
+                    70, 230, "km/h");
+        label_out_wind = create_label(screen_weather, &jb_mono_reg_20, COLOR_ORANGE, 
+                                      30, 230, "--");
+        
+        lvgl_port_unlock();
+    }
 }
 
 void check_modules_state(void)
@@ -261,7 +292,7 @@ void check_modules_state(void)
             if (lvgl_port_lock(0)) {
                 create_sensor_screen();
                 create_weather_screen();
-                lv_screen_load(screen_sensor);
+                lv_screen_load(screen_weather);
                 lvgl_port_unlock();
             }
             
@@ -274,9 +305,11 @@ void check_modules_state(void)
 void init_start_screen(void)
 {
     init_lcd(0);
-    create_info_screen();
+    create_weather_screen();
+    // create_info_screen();
     if (lvgl_port_lock(0)) {
-        lv_screen_load(screen_info);
+        // lv_screen_load(screen_info);
+        lv_screen_load(screen_weather);
         lvgl_port_unlock();
     }
 }
