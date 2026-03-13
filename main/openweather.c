@@ -1,15 +1,17 @@
-#include <stdio.h>
-#include <string.h>
+// #include <stdio.h>
+// #include <string.h>
 
-#include "wifi_connect.h"
-#include "get_weather.h"
-#include "get_time.h"
-#include "get_sensor_data.h"
-#include "st7789.h"
-#include "buttons.h"
 #include "openweather.h"
 
-static const char *TAG = "main";
+#include "buttons.h"
+#include "freertos/idf_additions.h"
+#include "get_sensor_data.h"
+#include "get_time.h"
+#include "get_weather.h"
+#include "st7789.h"
+#include "wifi_connect.h"
+
+static const char* TAG = "main";
 
 EventGroupHandle_t data_events;
 
@@ -21,25 +23,24 @@ sensor_data_t g_sensor_data = {0};
 time_data_t g_time_data = {0};
 weather_data_t g_weather_data = {0};
 
-lv_obj_t *label_co2 = NULL;
-lv_obj_t *label_temp = NULL;
-lv_obj_t *label_humid = NULL;
-lv_obj_t *label_time = NULL;
-lv_obj_t *label_info = NULL;
-lv_obj_t *label_date = NULL;
+lv_obj_t* label_co2 = NULL;
+lv_obj_t* label_temp = NULL;
+lv_obj_t* label_humid = NULL;
+lv_obj_t* label_time = NULL;
+lv_obj_t* label_info = NULL;
+lv_obj_t* label_date = NULL;
 
-lv_obj_t *label_out_temp = NULL;
-lv_obj_t *label_out_feels = NULL;
-lv_obj_t *label_out_humidity = NULL;
-lv_obj_t *label_out_cond = NULL;
-lv_obj_t *label_out_wind = NULL;
+lv_obj_t* label_out_temp = NULL;
+lv_obj_t* label_out_feels = NULL;
+lv_obj_t* label_out_humidity = NULL;
+lv_obj_t* label_out_cond = NULL;
+lv_obj_t* label_out_wind = NULL;
 
-lv_obj_t *screen_sensor = NULL;
-lv_obj_t *screen_info = NULL;
-lv_obj_t *screen_weather = NULL;
+lv_obj_t* screen_sensor = NULL;
+lv_obj_t* screen_info = NULL;
+lv_obj_t* screen_weather = NULL;
 
-void app_main(void)
-{
+void app_main(void) {
     sensor_mutex = xSemaphoreCreateMutex();
     time_mutex = xSemaphoreCreateMutex();
     weather_mutex = xSemaphoreCreateMutex();
@@ -48,7 +49,8 @@ void app_main(void)
 
     init_start_screen();
 
-    // xTaskCreate(wifi_connection_task, "wifi_connection_task", 4096, NULL, 6, NULL);
+    // xTaskCreate(wifi_connection_task, "wifi_connection_task", 4096, NULL, 6,
+    // NULL);
 
     // EventBits_t bits = xEventGroupWaitBits(
     //     data_events,
@@ -66,8 +68,9 @@ void app_main(void)
     //
     //     vTaskDelay(pdMS_TO_TICKS(500));
     //
-    //     xTaskCreate(on_off_button_task, "on_off_button_task", 4096, NULL, 3, NULL);
-    //     xTaskCreate(next_screen_button_task, "next_screen_button_task", 4096, NULL, 3, NULL);
+    //     xTaskCreate(on_off_button_task, "on_off_button_task", 4096, NULL, 3,
+    //     NULL); xTaskCreate(next_screen_button_task, "next_screen_button_task",
+    //     4096, NULL, 3, NULL);
     // }
 
     // check_modules_state();
@@ -84,8 +87,10 @@ void app_main(void)
     //     char sensor_buffer[64];
     //     if (bits & SENSOR_DATA_READY) {
     //         if (xSemaphoreTake(sensor_mutex, pdMS_TO_TICKS(100)) == pdTRUE) {
-    //             ESP_LOGI(TAG, "Processing sensor: CO2=%d ppm, Temp=%.1f°C, Hum=%.1f%%",
-    //                     g_sensor_data.co2_ppm, g_sensor_data.temperature, g_sensor_data.humidity);
+    //             ESP_LOGI(TAG, "Processing sensor: CO2=%d ppm, Temp=%.1f°C,
+    //             Hum=%.1f%%",
+    //                     g_sensor_data.co2_ppm, g_sensor_data.temperature,
+    //                     g_sensor_data.humidity);
     //
     //             if (lvgl_port_lock(0)) {
     //                 if (label_co2) {
@@ -94,16 +99,19 @@ void app_main(void)
     //                     } else {
     //                         lv_obj_set_pos(label_co2, 80, 260);
     //                     }
-    //                     snprintf(sensor_buffer, sizeof(sensor_buffer), "%d", g_sensor_data.co2_ppm);
-    //                     lv_label_set_text(label_co2, sensor_buffer);
+    //                     snprintf(sensor_buffer, sizeof(sensor_buffer), "%d",
+    //                     g_sensor_data.co2_ppm); lv_label_set_text(label_co2,
+    //                     sensor_buffer);
     //                 }
     //                 if (label_temp) {
-    //                     snprintf(sensor_buffer, sizeof(sensor_buffer), "%.1f", g_sensor_data.temperature);
+    //                     snprintf(sensor_buffer, sizeof(sensor_buffer), "%.1f",
+    //                     g_sensor_data.temperature);
     //                     lv_label_set_text(label_temp, sensor_buffer);
     //                 }
     //                 if (label_humid) {
-    //                     snprintf(sensor_buffer, sizeof(sensor_buffer), "%.1f", g_sensor_data.humidity);
-    //                     lv_label_set_text(label_humid, sensor_buffer);
+    //                     snprintf(sensor_buffer, sizeof(sensor_buffer), "%.1f",
+    //                     g_sensor_data.humidity); lv_label_set_text(label_humid,
+    //                     sensor_buffer);
     //                 }
     //                 lvgl_port_unlock();
     //             }
@@ -120,12 +128,13 @@ void app_main(void)
     //                     g_time_data.timeinfo.tm_sec);
     //
     //             if (lvgl_port_lock(0)) {
-    //                 strftime(time_buffer, sizeof(time_buffer), "%I:%M %p", &g_time_data.timeinfo);
-    //                 lv_label_set_text(label_time, time_buffer);
+    //                 strftime(time_buffer, sizeof(time_buffer), "%I:%M %p",
+    //                 &g_time_data.timeinfo); lv_label_set_text(label_time,
+    //                 time_buffer);
     //
-    //                 strftime(time_buffer, sizeof(time_buffer), "%Y/%m/%d", &g_time_data.timeinfo);
-    //                 lv_label_set_text(label_date, time_buffer);
-    //                 lvgl_port_unlock();
+    //                 strftime(time_buffer, sizeof(time_buffer), "%Y/%m/%d",
+    //                 &g_time_data.timeinfo); lv_label_set_text(label_date,
+    //                 time_buffer); lvgl_port_unlock();
     //             }
     //             xSemaphoreGive(time_mutex);
     //         }
@@ -139,25 +148,26 @@ void app_main(void)
     //
     //             if (lvgl_port_lock(0)) {
     //                 // Update temperature
-    //                 snprintf(weather_buffer, sizeof(weather_buffer), "%d", 
+    //                 snprintf(weather_buffer, sizeof(weather_buffer), "%d",
     //                         (int)g_weather_data.temperature);
     //                 lv_label_set_text(label_out_temp, weather_buffer);
     //
     //                 // Update feels like
-    //                 snprintf(weather_buffer, sizeof(weather_buffer), "(%d°C)", 
+    //                 snprintf(weather_buffer, sizeof(weather_buffer), "(%d°C)",
     //                         (int)g_weather_data.feels_like);
     //                 lv_label_set_text(label_out_feels, weather_buffer);
     //
     //                 // Update humidity
-    //                 snprintf(weather_buffer, sizeof(weather_buffer), "%d", 
+    //                 snprintf(weather_buffer, sizeof(weather_buffer), "%d",
     //                         g_weather_data.humidity);
     //                 lv_label_set_text(label_out_humidity, weather_buffer);
     //
     //                 // Update condition
-    //                 lv_label_set_text(label_out_cond, g_weather_data.condition);
+    //                 lv_label_set_text(label_out_cond,
+    //                 g_weather_data.condition);
     //
     //                 // Update wind speed
-    //                 snprintf(weather_buffer, sizeof(weather_buffer), "%.1f", 
+    //                 snprintf(weather_buffer, sizeof(weather_buffer), "%.1f",
     //                         g_weather_data.wind_speed);
     //                 lv_label_set_text(label_out_wind, weather_buffer);
     //
